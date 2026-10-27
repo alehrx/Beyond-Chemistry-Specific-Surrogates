@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-29T20:03:39",
+  "description": "HPO with a chemistry-free roll-out objective against the exact solution",
+  "dataset": "pilot PI set + exact roll-out chains",
+  "n_trials": 60,
+  "hpo_epochs": 200,
+  "device": "cuda",
+  "smoke": false
+}

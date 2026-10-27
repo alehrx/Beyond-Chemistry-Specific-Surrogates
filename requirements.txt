@@ -1,0 +1,11 @@
+# Versions the reported results were produced with. Newer minor releases are very likely fine;
+# keep pybamm pinned to reproduce numbers exactly: parameter-set values change between releases.
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.3.3
+matplotlib==3.10.8
+torch==2.6.0
+pybamm==25.8.0
+optuna==4.8.0
+scikit-learn==1.8.0
+tqdm==4.66.5

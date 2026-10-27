@@ -1,0 +1,207 @@
+{
+  "version": "v2-nondim",
+  "architecture": {
+    "n_sensors": 21,
+    "hidden_dim": 128,
+    "n_hidden_layers": 7,
+    "hard_bc": false,
+    "activation": "tanh",
+    "output_bias": true,
+    "time_features": "linear"
+  },
+  "sensors": [
+    0.0,
+    0.05,
+    0.1,
+    0.15000000000000002,
+    0.2,
+    0.25,
+    0.30000000000000004,
+    0.35000000000000003,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6000000000000001,
+    0.65,
+    0.7000000000000001,
+    0.75,
+    0.8,
+    0.8500000000000001,
+    0.9,
+    0.9500000000000001,
+    1.0
+  ],
+  "dimensionless": {
+    "tau_range": [
+      0.0,
+      0.2
+    ],
+    "phi_sampling": "N(0,1.5)",
+    "phi_range_recommended": [
+      -3.0,
+      3.0
+    ],
+    "time_column": "tau/tau_max in [0,1]",
+    "state": "x = c/c_max, centre-pinned"
+  },
+  "chemistry_agnostic": true,
+  "electrodes": "both (sign carried by Phi)",
+  "pde": "dx/dtau = xi^-2 d/dxi(xi^2 dx/dxi); -dx/dxi|1 = Phi; hard-BC q=-Phi",
+  "training": {
+    "best_epoch": 1383,
+    "best_val_loss": 0.008290405385196209,
+    "dd_metrics_best": {
+      "mse": 1.0160565580008551e-06,
+      "rmse": 0.001007996266707778,
+      "surface_rmse": 0.003126091556623578,
+      "rel_to_step": 0.015972988680005074,
+      "n": 1084,
+      "mse_strat": 3.3325500226055738e-06,
+      "mse_worst": 2.5127330445684493e-05,
+      "mse_groups": {
+        "0": 4.9460251005939426e-08,
+        "1": 2.582826219565959e-08,
+        "10": 5.277093464428617e-07,
+        "11": 5.8861195384452e-07,
+        "20": 4.7666895852671587e-07,
+        "21": 1.296470575340436e-08,
+        "30": 2.3572880536448793e-07,
+        "31": 9.037669883582566e-07,
+        "40": 2.5127330445684493e-05,
+        "41": 5.3774260777572636e-06
+      }
+    },
+    "finalized_from_checkpoint": false,
+    "epochs": 2500,
+    "loss_weights": [
+      19.59005883863862,
+      596.602170604593,
+      147.88869517298835,
+      2.487794682388338
+    ],
+    "rollout_K": 0,
+    "lr": 0.0008359888541931385,
+    "activation": "tanh",
+    "hpo_config": "runs\\hpo_nd_005\\model_config.json",
+    "val_mode": "dd",
+    "time_features": "linear",
+    "lbfgs_phase": false,
+    "lr_lbfgs": 0.001,
+    "lbfgs_full_batch": true,
+    "lbfgs_ny": [
+      1000,
+      200,
+      100
+    ],
+    "pde_form": "conservative",
+    "lbfgs_resample": true,
+    "val_stratified": true,
+    "rollout_n_profiles": 8,
+    "cons_use_ic": false,
+    "resample_every": 100,
+    "geometry": "uniform",
+    "geometry_law": "hybrid",
+    "t_hi": 1.0,
+    "tau_split": null,
+    "profile_amp_random": false,
+    "phi_prev_match": 0.5,
+    "scale_length1": [
+      0.5,
+      1.0
+    ],
+    "xi_map": "uniform",
+    "xi_warp_p": 2.0,
+    "xi_colloc": "uniform",
+    "xi_quad": "uniform",
+    "cons_n_ksi": 41,
+    "cons_n_t": 4,
+    "lbfgs_patience": 5,
+    "monitor2": null,
+    "profile_space": "physical",
+    "ref_grid": "fv",
+    "ref_r_pts": 32,
+    "dd_spec": [
+      {
+        "pm": "Ai2020",
+        "T": 25.0,
+        "cr": 1.0
+      },
+      {
+        "pm": "Mohtat2020",
+        "T": 25.0,
+        "cr": 2.0
+      },
+      {
+        "pm": "Marquis2019",
+        "T": 0.0,
+        "cr": 1.0
+      },
+      {
+        "pm": "Chen2020",
+        "T": 0.0,
+        "cr": 2.0
+      },
+      {
+        "pm": "Prada2013",
+        "T": 50.0,
+        "cr": 2.0
+      }
+    ],
+    "track_pi_val": true,
+    "monitor": "pi_val_loss",
+    "lr_decay": true,
+    "lr_decay_epochs": 1000,
+    "es_from_epoch": 1000,
+    "patience": 100,
+    "val_pi_sizes": {
+      "n_pde": 150,
+      "ny_pde": 1000,
+      "n_ic": 300,
+      "ny_ic": 100,
+      "n_bc": 300,
+      "ny_bc": 100
+    },
+    "dd_reference": {
+      "param_set": "Mohtat2020",
+      "T_C": [
+        -5.0,
+        10.0,
+        25.0,
+        45.0
+      ],
+      "c_rates": [
+        0.75,
+        2.0
+      ],
+      "period_s": 60.0
+    },
+    "profile_mode": "grf+parabola",
+    "scale_factor1": 0.2,
+    "shaped_grf_frac": 0.2,
+    "shaped_indep_frac": 0.3,
+    "shaped_m_range": [
+      2.0,
+      20.0
+    ],
+    "shaped_noise": 0.03,
+    "shaped_depth_max": 0.65,
+    "profile_amp_max": null,
+    "profile_layer_frac": 0.0,
+    "cons_legacy": false,
+    "profile_layer_delta": [
+      0.08,
+      0.35
+    ],
+    "w_dd": 0.0,
+    "dd_train": null,
+    "N_pde": 1000,
+    "Ny_pde": 5000,
+    "N_ic": 2000,
+    "N_bc": 2000,
+    "seed": 45,
+    "smoke": false
+  },
+  "weights_file": "model.pt",
+  "torch": "2.6.0+cu126"
+}
