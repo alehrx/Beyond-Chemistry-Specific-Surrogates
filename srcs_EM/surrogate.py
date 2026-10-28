@@ -3,7 +3,7 @@ surrogate.py
 ============
 The ONE deployment API for the v2 dimensionless MIONet.
 
-    sur  = Surrogate.from_run("runs/v2_nondim/trained_model_s42_lbfgs")   # self-describing artifact
+    sur  = Surrogate.from_run("runs/v2_nondim/mionet_77k_s42")             # self-describing artifact
     chem = Chemistry.from_pybamm("Mohtat2020", "Negative")
     x1   = sur.step(x0, I=-10.0, dt=60.0, chem=chem, T=268.15)      # (n_sensors,) stoichiometry
 

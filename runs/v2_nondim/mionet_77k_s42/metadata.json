@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-25T17:14:08",
+  "description": "MIONet v2: dimensionless single-particle diffusion operator, physics-informed only (PDE/IC/BC/cons), one net for both electrodes",
+  "dataset": "PI collocation in (xi, tau) via srcs.prepData; validation on a held-out PI collocation set (no labelled data)",
+  "git_hash": "3c4c16e",
+  "git_hash_at_save": "3c4c16e",
+  "device": "cuda",
+  "smoke": false
+}

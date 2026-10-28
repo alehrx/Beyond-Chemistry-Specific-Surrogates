@@ -4,8 +4,8 @@ fig_training_data.py
 Training-set figure for the dimensionless formulation, drawn from the ACTUAL sampler used in
 training (srcs.prepData), configured from the reported run's own config.json.
 
-    python scripts/figures/fig_training_data.py                          # the reported run (trained_model_s42)
-    python scripts/figures/fig_training_data.py --run trained_model_s43  # any other run
+    python scripts/figures/fig_training_data.py                          # the reported run (mionet_77k_s42)
+    python scripts/figures/fig_training_data.py --run mionet_77k_s43     # any other run
 
   (a) initial profiles x0 = s GRF(xi) - Phi_prev xi^2/2: each drawn profile (solid, read at the
       sensors) with its parabolic component (dashed), so the two ingredients stay visible. The
@@ -44,6 +44,7 @@ mpl.rcParams.update({
        if __import__('shutil').which('latex') else {'text.usetex': False, 'mathtext.fontset': 'cm'}),
 })
 mm = 1 / 25.4
+TITLE = (r'\textbf{(%s)} %s' if mpl.rcParams['text.usetex'] else '(%s) %s')   # as in the other figures
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))                # the repository root
@@ -55,7 +56,7 @@ from srcs.prepData import Config, data                      # noqa: E402
 log = logging.getLogger(__name__)
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--run', default='trained_model_s42', help='run whose sampler configuration is drawn')
+ap.add_argument('--run', default='mionet_77k_s42', help='run whose sampler configuration is drawn')
 ap.add_argument('--seed', type=int, default=7)
 ap.add_argument('--suffix', default='')
 A = ap.parse_args()
@@ -130,7 +131,7 @@ for (br, pp, xi, prof), c in zip(profiles, cols):
     ax_a.plot(xi, prof, '-', color=c, lw=1.2)
     ax_a.plot(sensors, np.interp(sensors, xi, prof), 'o', color=c, ms=2.4, lw=0)
 ax_a.axhline(0, color='0.85', lw=0.6, zorder=0)
-ax_a.plot([], [], '-', color='0.35', lw=1.2, label=r'$x_0(r)$')
+ax_a.plot([], [], '-', color='0.35', lw=1.2, label=r'$c_{s,0}(r)$')
 ax_a.plot([], [], 'o', color='0.35', ms=2.4, lw=0, label='sensors')
 # headroom above the curves so the legend never sits on a profile, whatever the draw
 _lo = min(float(pr.min()) for *_, pr in profiles)
@@ -139,8 +140,8 @@ ax_a.set_ylim(-1.2 * AMP_SHOW, 1.45 * AMP_SHOW)
 ax_a.legend(loc='upper left', fontsize=6.5, handlelength=1.6, handletextpad=0.4, labelspacing=0.25,
             borderaxespad=0.2)
 ax_a.set_xlabel(r'radius $r$')
-ax_a.set_ylabel(r'$x_0(r)$, centre-pinned', labelpad=2)
-ax_a.set_title('(a) input profiles', fontsize=8.5)
+ax_a.set_ylabel(r'$c_{s,0}(r)$', labelpad=2)
+ax_a.set_title(TITLE % ('a', 'Input profiles'), fontsize=8.5, loc='left')
 
 # (b)
 g = np.linspace(-4, 4, 400)
@@ -159,14 +160,14 @@ ax_b.set_xlabel(r'normalised flux $\Phi/\sigma_\Phi$')
 ax_b.set_ylabel('probability density')
 ax_b.legend(loc='upper left', fontsize=5.5, handlelength=1.1, handleheight=0.6, handletextpad=0.3,
             labelspacing=0.2, borderaxespad=0.2)
-ax_b.set_title('(b) flux distribution', fontsize=8.5)
+ax_b.set_title(TITLE % ('b', 'Flux distribution'), fontsize=8.5, loc='left')
 
 # (c) main
 ax_c.fill_between([0, 1], [1, 1], color='0.98', zorder=0)
 for k, tm in enumerate(mass_t):
     ax_c.plot([tm, tm], [0, 1], '-', color=C_MASS, lw=0.6, alpha=0.6, zorder=1)
     ax_c.plot(np.full_like(mass_xi, tm), mass_xi, 'o', color=C_MASS, ms=2.0, zorder=2,
-              label='LB' if k == 0 else None)
+              label='MC' if k == 0 else None)
 ax_c.plot(pde_show[:, 0], pde_show[:, 1], 'o', ms=1.3, color=C_PDE, label='PDE', zorder=3)
 ax_c.plot(np.zeros_like(X_ic), X_ic, 'o', ms=2.6, color=C_IC, label='IC', zorder=4, clip_on=False)
 ax_c.plot(bc_show, np.ones_like(bc_show), 'o', ms=2.6, color=C_BC, label='BC', zorder=4, clip_on=False)
@@ -174,7 +175,7 @@ ax_c.plot(bc_show, np.zeros_like(bc_show), 'o', ms=2.6, color=C_BC, zorder=4, cl
 ax_c.set_xlim(0, 1)
 ax_c.set_ylim(0, 1)
 ax_c.set_ylabel(r'radius $r$')
-ax_c.set_title('(c) collocation points', fontsize=8.5)
+ax_c.set_title(TITLE % ('c', 'Collocation points'), fontsize=8.5, loc='left')
 ax_c.set_xlabel(r'time $\tau/\tau_{\max}$', labelpad=1)    # tau ticks are read on the main panel
 
 # (c) marginals, measured on the full draw

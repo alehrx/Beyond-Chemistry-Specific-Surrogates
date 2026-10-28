@@ -6,7 +6,7 @@ multi-slice extensions. From the repository root:
 
     from srcs_EM import Surrogate, Chemistry
 
-    sur  = Surrogate.from_run("runs/v2_nondim/trained_model_s42_lbfgs")
+    sur  = Surrogate.from_run("runs/v2_nondim/mionet_77k_s42")
     chem = Chemistry.from_pybamm("Mohtat2020", "Negative")
     x1   = sur.step(x0, I, dt, chem, T)
 """

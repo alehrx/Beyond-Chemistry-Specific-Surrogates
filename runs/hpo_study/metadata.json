@@ -1,9 +1,56 @@
 {
-  "date": "2026-09-29T20:03:39",
+  "date": "2026-10-25T13:02:15",
   "description": "HPO with a chemistry-free roll-out objective against the exact solution",
-  "dataset": "pilot PI set + exact roll-out chains",
+  "dataset": "pilot PI set (hpo_nd_005 data) + exact roll-out chains, no PyBaMM in the objective",
+  "args": {
+    "name": "hpo_rollout_wk25r",
+    "hidden": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "layers": [
+      2,
+      8
+    ],
+    "lr": null,
+    "trials": 60,
+    "steps": 10,
+    "lr_range": null,
+    "pilot_mult": 2,
+    "batches": 16,
+    "no_project": true,
+    "epochs": 200,
+    "torch_seed": 42,
+    "with_dd": false,
+    "smoke": false,
+    "key_only": false,
+    "hard_bc": false,
+    "eval_runs": null
+  },
+  "pilot": {
+    "N_pde": 300,
+    "Ny_pde": 3000,
+    "N_ic": 400,
+    "Ny_ic": 100,
+    "N_bc": 400,
+    "Ny_bc": 300,
+    "num_batches": 16
+  },
+  "lr_range": [
+    0.0001,
+    0.001
+  ],
+  "n_chains": 128,
+  "n_steps": 10,
+  "chain_seed": 2024,
+  "dtau_range": [
+    0.002,
+    0.03
+  ],
+  "phi_segment_mean": 8,
+  "phi_clip": 3.0,
   "n_trials": 60,
-  "hpo_epochs": 200,
-  "device": "cuda",
-  "smoke": false
+  "hpo_epochs": 200
 }

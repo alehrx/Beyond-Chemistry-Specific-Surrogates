@@ -1,0 +1,51 @@
+{
+  "name": "mionet_77k",
+  "description": "The reported 77k network (64 x 7 SiLU), seeds 42-45, Adam stage. Hyperparameters from the roll-out HPO runs/hpo_study (originally hpo_rollout_wk25r). Seed 42 was trained in study \"wk25r\" (num_batches \"auto\", which chose 32), seeds 43-45 in study \"wk25rcv\" with num_batches fixed to 32; the run folders were renamed from wk25r_s42 / wk25rcv_s43..45. The L-BFGS refinement is not used by the paper.",
+  "seeds": [
+    42,
+    43,
+    44,
+    45
+  ],
+  "hyperparameters": {
+    "mode": "file",
+    "path": "runs/hpo_study"
+  },
+  "dataset": {
+    "n_pde": 1000,
+    "ny_pde": 5000,
+    "n_ic": 2000,
+    "ny_ic": 100,
+    "n_bc": 2000,
+    "ny_bc": 500,
+    "resample_every": 100
+  },
+  "training": {
+    "hard_bc": false,
+    "num_batches": 32,
+    "epochs": 2500,
+    "lr_decay": true,
+    "lr_decay_epochs": 1000,
+    "lr_end_factor": 0.01,
+    "patience": 100,
+    "es_from_epoch": 1000,
+    "monitor": "pi_val_loss",
+    "monitor2": null
+  },
+  "lbfgs": {
+    "enabled": false
+  },
+  "scoring": {
+    "enabled": true,
+    "tau_target": 0.05,
+    "models": "adam"
+  },
+  "postprocess": {
+    "training_curves": false,
+    "hpo": false,
+    "error_bins": {
+      "enabled": false
+    },
+    "phi_error": false
+  }
+}

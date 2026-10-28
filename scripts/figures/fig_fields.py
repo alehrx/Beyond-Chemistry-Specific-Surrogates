@@ -2,7 +2,7 @@
 fig_fields.py
 =============
 Concentration fields of one complete cycle (the paper's case: Mohtat2020, 0 C, CC-CV 1C), reported
-model trained_model_s42_lbfgs (seed 42), rolled out with the adaptive window rule exactly as in the scoring.
+model mionet_77k_s42 (seed 42), rolled out with the adaptive window rule exactly as in the scoring.
 
     (a) anode | cathode, three rows each: PyBaMM, MIONet, relative error (% of the electrode's
         stoichiometry range, the normalisation of every error in the paper), over (t, r)
@@ -42,7 +42,7 @@ sys.path.insert(0, os.path.join(SM, 'srcs'))
 import evaluation as rr                          # noqa: E402
 from srcs_EM import Surrogate, Chemistry       # noqa: E402
 
-RUN = os.path.join(SM, 'runs', 'v2_nondim', 'trained_model_s42_lbfgs')
+RUN = os.path.join(SM, 'runs', 'v2_nondim', 'mionet_77k_s42')
 # the paper's three field figures: (cell, protocol, T [C], output name)
 CASES = [('Mohtat2020', 'CC-CV 1C', 0.0, 'fig_fields_mohtat2020')]
 if os.environ.get('CELL'):                       # one case from the environment instead
@@ -55,6 +55,7 @@ FIG = os.environ.get('MIONET_FIG_DIR') or os.path.join(SM, 'figures')        # o
 SNAP_FRAC = (0.15, 0.42, 0.75, 0.95)
 MARKERS = ('o', 's', '^', 'D')
 SNAP_COL = ('#0072B2', '#D55E00', '#009E73', '#CC79A7')
+C_SHRINK = 0.8           # height of panel (c), radial profiles, relative to the original layout
 TEX = mpl.rcParams['text.usetex']
 log = logging.getLogger(__name__)
 
@@ -83,14 +84,22 @@ def draw(sur, CELL, PROTOCOL, T_C, STEM):
     tm, r = t / 60.0, rr.XI_D
     snaps = [int(f * (len(t) - 1)) for f in SNAP_FRAC]
     from matplotlib.gridspec import GridSpec
-    fig = plt.figure(figsize=(170 * mm, 205 * mm))
+    # The layout is designed on a 205-mm page; panel (c) is then shortened by C_SHRINK and the figure
+    # with it, so (a) and (b) keep their absolute size (the full height left no room for the caption).
+    H0 = 205.0
+    dc = (0.315 - 0.075) * H0 * (1.0 - C_SHRINK)                  # mm taken out of panel (c)
+    H = H0 - dc
+    up = lambda f: (f * H0 - dc) / H                               # noqa: E731  above (c): shifted down
+    fig = plt.figure(figsize=(170 * mm, H * mm))
     # columns: anode field | its colour bar | gap | cathode field | its colour bar
     wr = [1.0, 0.035, 0.44, 1.0, 0.035]
     L, R = 0.085, 0.915
-    g_top = GridSpec(3, 5, figure=fig, left=L, right=R, top=0.965, bottom=0.555, width_ratios=wr,
+    g_top = GridSpec(3, 5, figure=fig, left=L, right=R, top=up(0.965), bottom=up(0.555), width_ratios=wr,
                      wspace=0.06, hspace=0.16)
-    g_mid = GridSpec(1, 5, figure=fig, left=L, right=R, top=0.475, bottom=0.391, width_ratios=wr, wspace=0.06)
-    g_bot = GridSpec(1, 5, figure=fig, left=L, right=R, top=0.315, bottom=0.075, width_ratios=wr, wspace=0.06)
+    g_mid = GridSpec(1, 5, figure=fig, left=L, right=R, top=up(0.475), bottom=up(0.391), width_ratios=wr,
+                     wspace=0.06)
+    g_bot = GridSpec(1, 5, figure=fig, left=L, right=R, top=up(0.315), bottom=0.075 * H0 / H, width_ratios=wr,
+                     wspace=0.06)
     ax = {}
     for c0, key in ((0, 'a'), (3, 'c')):
         for row, rk in enumerate('PME'):

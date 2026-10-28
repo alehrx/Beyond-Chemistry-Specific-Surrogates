@@ -21,7 +21,7 @@ The temperature grid is 0 / 25 / 50 C.
 Colours follow the rest of the paper: blue for the anode, orange for the cathode, with protocol
 shown by shade within the electrode's hue.
 
-Reads runs/studies/trained_model/results.csv (srcs/evaluation.py, the scores of the four networks).
+Reads runs/studies/mionet_77k/results.csv (srcs/evaluation.py, the scores of the four networks).
 """
 import argparse
 import os
@@ -60,7 +60,7 @@ sys.path.insert(0, SM)
 sys.path.insert(0, os.path.join(SM, 'srcs'))
 
 log = logging.getLogger(__name__)
-CSV = os.path.join(SM, 'runs', 'studies', 'trained_model', 'results.csv')   # --csv: the paper's scores
+CSV = [os.path.join(SM, 'runs', 'studies', 'mionet_77k', 'results.csv')]   # --csv: the paper's scores
 FIG = os.environ.get('MIONET_FIG_DIR') or os.path.join(SM, 'figures')
 
 CELL_ORDER = ['Ai2020', 'Marquis2019', 'Mohtat2020', 'Chen2020', 'Prada2013']   # the paper's names
@@ -304,7 +304,8 @@ def fig_by_temperature(d, cells, metric, is_cv, extra=None, extra_name=''):
                )
     current_axes = (fig.add_subplot(gs[2, :3]), fig.add_subplot(gs[2, 3:]))
     current_miniatures(*current_axes, panel_labels=('(b)', '(c)'))
-    fig.supylabel(YLABEL, fontsize=9, y=0.62)
+    for r in range(2):                                   # one label per electrode row
+        axs[r, 0].set_ylabel(YLABEL, fontsize=9)
     return fig, g
 
 
@@ -320,7 +321,8 @@ def main():
                          "for; it is still computed in results.csv but is no longer the default "
                          "full-profile figure")
     ap.add_argument('--by-temperature', action='store_true')
-    ap.add_argument('--csv', default=None, help='results file (default runs/studies/trained_model/results.csv)')
+    ap.add_argument('--csv', nargs='+', default=None,
+                    help='results file(s), concatenated (default runs/studies/mionet_77k/results.csv)')
     ap.add_argument('--both', action='store_true', help='write both figures (default)')
     ap.add_argument('--protocols', nargs='*', default=None,
                     help='which protocols to show (default %s)' % PROTOCOLS)
@@ -354,13 +356,14 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     global CSV
     if a.csv:
-        CSV = os.path.abspath(a.csv)
-    if not os.path.exists(CSV):
-        raise SystemExit(f'{CSV} not found - score the models with srcs/evaluation.py first')
+        CSV = [os.path.abspath(c) for c in a.csv]
+    for c in CSV:
+        if not os.path.exists(c):
+            raise SystemExit(f'{c} not found - score the models with srcs/evaluation.py first')
 
     if a.protocols:
         PROTOCOLS = a.protocols
-    d = pd.read_csv(CSV)
+    d = pd.concat([pd.read_csv(c) for c in CSV], ignore_index=True)
     d['cell'] = d['cell'].replace(LEGACY)
     d = d[d.protocol.isin(PROTOCOLS)]
     if 'ds_mode' in d.columns:

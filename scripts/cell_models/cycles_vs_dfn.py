@@ -63,7 +63,7 @@ import pybamm                                                     # noqa: E402
 from srcs_EM import Cell, MultiSlice                            # noqa: E402
 from srcs_EM.cell import CellState                              # noqa: E402
 
-MODEL = os.path.join(SM, 'runs', 'v2_nondim', 'trained_model_s42_lbfgs')
+MODEL = os.path.join(SM, 'runs', 'v2_nondim', 'mionet_77k_s42')
 PARAM_SET, T_C, PERIOD_S, CV_CUT = 'Ai2020', 25.0, 5.0, 'C/20'   # 5 s: with 10 thin slices the
 # currents frozen over a 20-s step make the coupling unstable at the 3C reversal
 RATES, FIELD_RATE = (1.0, 2.0, 3.0), 3.0
@@ -226,7 +226,7 @@ def fig_cycles(ref, res):
         ax.set_xlim(0, 1)
     for ax, l, t in ((ax_v, '(a)', 'Terminal voltage and applied current'), (ax_e, '(b)', 'Voltage error')):
         ax.set_title((r'\textbf{%s} %s' if TEX else '%s %s') % (l, t), loc='left', fontsize=9)
-    h = [Line2D([], [], color=PLANT_C, lw=1.3, label='PyBaMM DFN (plant)')]
+    h = [Line2D([], [], color=PLANT_C, lw=1.3, label='PyBaMM DFN (reference)')]
     h += [Line2D([], [], color=c, lw=1.2, label='MIONet in %s' % n) for n, c in COL.items()]
     h += [Line2D([], [], color='0.4', lw=1.0, ls=RATE_LS[cr], label='%gC' % cr) for cr in RATES]
     fig.legend(handles=h, loc='upper center', ncol=7, fontsize=7.5, bbox_to_anchor=(0.5, 1.0),
@@ -237,10 +237,15 @@ def fig_cycles(ref, res):
 def fig_surface(r, o, ms):
     """Surface stoichiometry over (t, x) in each electrode: DFN, multi-slice, |difference|."""
     tm = r['t'] / 60
-    fig = plt.figure(figsize=(170 * mm, 112 * mm))
+    fig = plt.figure(figsize=(170 * mm, 108 * mm))
     wr = [1.0, 0.13, 1.0, 0.035, 0.42, 1.0, 0.035]
-    gs = GridSpec(3, 7, figure=fig, width_ratios=wr, height_ratios=[1.0, 1.0, 0.42], hspace=0.18,
-                  wspace=0.05, left=0.07, right=0.93, top=0.93, bottom=0.10)
+    # (a) the fields, two electrode rows at 0.75 of their former height; a spacer row that leaves room
+    # for the time label above and the title of (b); (b) the applied current
+    gs = GridSpec(4, 7, figure=fig, width_ratios=wr, height_ratios=[0.75, 0.75, 0.20, 0.42], hspace=0.40,
+                  wspace=0.05, left=0.07, right=0.93, top=0.88, bottom=0.10)
+    fig.text(0.07, 0.975, (r'\textbf{(a)} Surface concentration field across the electrode thickness'
+                           if TEX else '(a) Surface concentration field across the electrode thickness'),
+             fontsize=9, ha='left', va='top')
     L_n, L_p = ms.chem['n'].L, ms.chem['p'].L
     for row, (key, name, xr, s_ref, s_mod, L) in enumerate(
             (('n', 'anode', r['x_n'], r['s_n'], o['sto_n_surf'], L_n),
@@ -271,9 +276,7 @@ def fig_surface(r, o, ms):
                 ax.tick_params(labelleft=False)
             if col == 0:
                 ax.set_ylabel('%s, $x$ [$\\mu$m]' % name if TEX else '%s, x [um]' % name)
-            if row == 0:
-                ax.tick_params(labelbottom=False)
-            else:
+            if row == 1:                                         # time ticks on both rows, the label once
                 ax.set_xlabel('time [min]')
             ax.minorticks_off()
             if col in (2, 5):
@@ -291,14 +294,16 @@ def fig_surface(r, o, ms):
     cr = r['I_mean'] / r['q']
     pad = 0.1 * float(np.max(np.abs(cr)))
     for col in (slice(None),):
-        ax = fig.add_subplot(gs[2, col])
+        ax = fig.add_subplot(gs[3, col])
         ax.plot(tm[:-1], cr, color='k', lw=1.0, drawstyle='steps-post')
         ax.axhline(0, color='0.75', lw=0.6, zorder=0)
         ax.set_xlim(tm[0], tm[-1])
         ax.set_ylim(float(cr.min()) - pad, float(cr.max()) + pad)
+        ax.set_yticks([-FIELD_RATE, 0, FIELD_RATE])               # whole C-rates, not +-2.5
         ax.set_xlabel('time [min]')
         ax.spines[['top', 'right']].set_visible(False)
         ax.set_ylabel(r'$I$ [C-rate]' if TEX else 'I [C-rate]')
+        ax.set_title((r'\textbf{(b)} Applied current' if TEX else '(b) Applied current'), fontsize=9, loc='left')
     return fig
 
 

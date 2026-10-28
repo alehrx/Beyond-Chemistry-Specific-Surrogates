@@ -56,7 +56,7 @@ T.SCALE_LENGTH1, T.SCALE_LENGTH2 = cd['scale_length1'], cd['scale_length2']
 T.N_PDE, T.NY_PDE = cd['N_pde'], %(ny_pde)d
 T.N_IC, T.NY_IC = cd['N_ic'], cd['Ny_ic']
 T.N_BC, T.NY_BC = cd['N_bc'], cd['Ny_bc']
-T.NUM_BATCHES = cd['num_batches']
+T.NUM_BATCHES = %(num_batches)s  # the source's value unless --num-batches overrides it
 # The three xi laws are pinned to the RESOLVED values the artifact recorded, never left to the
 # geometry switch: 'particle' as a GEOMETRY meant the pure equal-volume law when the older runs
 # were made and means the hybrid law now, so inheriting it would silently train a different mesh.
@@ -118,7 +118,7 @@ T.main()
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--from', dest='src', default='trained_model_s42')
+    ap.add_argument('--from', dest='src', default='mionet_77k_s42')
     ap.add_argument('--init', default='model', choices=['model', 'best_pi'],
                     help="which checkpoint to warm-start from: 'model' is the run's model.pt, "
                          "'best_pi' its second checkpoint when it kept one. The configuration is read "
@@ -133,6 +133,10 @@ def main():
     ap.add_argument('--ny-pde', type=int, default=1000,
                     help='points per profile in the L-BFGS full batch (second derivatives, so this '
                          'is what decides whether it fits in memory)')
+    ap.add_argument('--num-batches', default=None,
+                    help="'auto' or an int; default: the source run's value. The full batch does not "
+                         "depend on it, but 'auto' empties the CUDA cache after the adaptive draw, and a "
+                         "fixed count (seed 43 of mionet_77k, originally wk25rcv: 32) left too little memory for the full-batch closure")
     ap.add_argument('--no-adaptive', action='store_true', help='the control: uniform points')
     ap.add_argument('--lbfgs-resample', action='store_true',
                     help='redraw the full-batch subset every epoch (resets the L-BFGS history)')
@@ -153,7 +157,10 @@ def main():
                               seed=a.seed, lr=a.lr, epochs=a.epochs, patience=a.patience,
                               ny_pde=a.ny_pde, resample=bool(a.lbfgs_resample),
                               adaptive=('None' if a.no_adaptive else repr((a.pool, a.k, a.c))),
-                              monitor=a.monitor))
+                              monitor=a.monitor,
+                              num_batches=("cd['num_batches']" if a.num_batches is None
+                                           else repr(a.num_batches if a.num_batches == 'auto'
+                                                     else int(a.num_batches)))))
     print('\n$ %s %s' % (PY, drv), flush=True)
     r = subprocess.run([PY, drv], cwd=SM_ROOT)
     if r.returncode:

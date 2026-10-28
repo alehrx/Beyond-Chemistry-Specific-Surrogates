@@ -8,7 +8,7 @@ peak flux with the sign of its DISCHARGE phase: anodes on the positive side, cat
 negative side (a cycle visits the opposite sign on charge with the same magnitude). Above it, the
 training density Phi ~ N(0, 1.5^2) with the 1 and 2 sigma bands. Error: full-profile RMSE without
 volume weighting, mean over the four seeds, window rule tau <= 0.05 or a 5 % current change, 51-point
-scoring grid (runs/studies/trained_model/results.csv). Single-column figure.
+scoring grid (runs/studies/mionet_77k/results.csv). Single-column figure.
 
 Writes figures/fig_phi_error.pdf (or MIONET_FIG_DIR).
 """
@@ -41,9 +41,9 @@ mm = 1 / 25.4
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SM = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))
-CSV = os.path.join(SM, 'runs', 'studies', 'trained_model', 'results.csv')
+CSV = [os.path.join(SM, 'runs', 'studies', 'mionet_77k', 'results.csv')]
 FIG = os.environ.get('MIONET_FIG_DIR') or os.path.join(SM, 'figures')        # override: paper folder
-MODELS = ['trained_model_s42_lbfgs', 'trained_model_s43_lbfgs', 'trained_model_s44_lbfgs', 'trained_model_s45_lbfgs']
+MODELS = ['mionet_77k_s42', 'mionet_77k_s43', 'mionet_77k_s44', 'mionet_77k_s45']
 SCORING, METRIC, SIGMA = 'mean-adapt0.05-direct-fv51', 'pct_full', 1.5
 SIGN = {'anode': 1.0, 'cathode': -1.0}                  # sign of Phi on discharge (Chemistry.sign)
 CELLS = {'Ai2020': ('Ai2020', 'o', '#0072B2'), 'Marquis2019': ('Marquis2019', 's', '#D55E00'),
@@ -58,12 +58,12 @@ log = logging.getLogger(__name__)
 def main():
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument('--csv', default=CSV, help='results file')
+    ap.add_argument('--csv', nargs='+', default=CSV, help='results file(s), concatenated')
     ap.add_argument('--models', nargs='+', default=MODELS, help='the seeds: mean and range over them')
     ap.add_argument('--scoring', default=SCORING, help='ds_mode tag of the rows to plot')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(message)s')
-    d = pd.read_csv(a.csv)
+    d = pd.concat([pd.read_csv(c) for c in ([a.csv] if isinstance(a.csv, str) else a.csv)], ignore_index=True)
     d['cell'] = d['cell'].replace(LEGACY)
     d = d[d.model.isin(a.models) & (d.ds_mode == a.scoring)]
     g = d.groupby(['cell', 'protocol', 'electrode', 'T_C']).agg(
@@ -94,7 +94,8 @@ def main():
     ax.set_xlim(-3.6, 3.6)
     ax.set_xlabel(r'peak flux $\Phi$' if TEX else 'peak flux Phi')
     ax.set_ylabel('RMSE [%s]' % (r'\%' if TEX else '%'))
-    fig.suptitle('Roll-out error against the dimensionless flux', fontsize=9, x=0.02, ha='left')
+    # an axes title, so it starts at the y-axis as in the other figures; the pad clears the sigma labels
+    ax0.set_title('Roll-out error against the dimensionless flux', fontsize=9, loc='left', pad=11)
     ax.text(0.98, 0.97, 'anodes', transform=ax.transAxes, ha='right', va='top',
             fontsize=7, color='0.35')
     ax.text(0.02, 0.97, 'cathodes', transform=ax.transAxes, ha='left', va='top',

@@ -32,7 +32,7 @@ Run everything from the repository root.
 import numpy as np
 from srcs_EM import Surrogate, Chemistry
 
-sur  = Surrogate.from_run("runs/v2_nondim/trained_model_s42_lbfgs")  # the reported network (seed 42)
+sur  = Surrogate.from_run("runs/v2_nondim/mionet_77k_s42")   # the reported network (seed 42)
 chem = Chemistry.from_pybamm("Chen2020", "Negative")         # any electrode of any parameter set
 
 x = np.full(sur.n, 0.8)                                      # stoichiometry at the sensors
@@ -69,11 +69,49 @@ scripts/
   figures/                the paper's data figures (make_figures.py regenerates all of them)
 configs/        study configurations (README.md lists every key)
 runs/
-  v2_nondim/      the four reported networks, trained_model_s42..s45, each with its Adam stage
-                  (<name>) and its L-BFGS refinement (<name>_lbfgs)
-  studies/        trained_model/: the study record of the four networks (config, metadata, and
+  v2_nondim/      the four reported networks, mionet_77k_s42..s45 (64 x 7 SiLU, 76 609 parameters,
+                  0.31 MB in float32)
+  studies/        mionet_77k/: the study record of the four networks (config, metadata, and
                   results.csv, the scores the figures are drawn from)
-  hpo_study/      the hyperparameter search behind the reported configuration (study.db)
+  hpo_study/      the hyperparameter search behind the reported configuration (study.db), ranked
+                  on the roll-out error against the exact solution
 figures/        the paper's data figures (PDF)
 ```
 
+## Reproduce
+
+```bash
+python scripts/run_training.py configs/mionet_77k.json    # seeds 42-45, hyperparameters from runs/hpo_study
+python scripts/figures/make_figures.py                    # the paper's data figures, into figures/
+```
+
+With the shipped runs in place, finished stages are skipped and the scores are read from
+`runs/studies/mionet_77k/results.csv`. Each network is scored on 120
+roll-outs against PyBaMM: five parameter sets (Ai2020, Marquis2019, Mohtat2020, Chen2020, Prada2013),
+CC-CV 0.5C / 1C / 3C and DST 3C, 0 / 25 / 50 C, both electrodes. PyBaMM references are solved on
+first use and cached.
+
+Full-profile RMSE, % of the electrode's stoichiometry range, over the 120 roll-outs:
+
+| seed | CC-CV mean / worst | DST mean / worst |
+|---|---|---|
+| 42 | 0.201 / 0.864 | 0.220 / 0.470 |
+| 43 | 0.206 / 0.845 | 0.309 / 0.874 |
+| 44 | 0.197 / 0.779 | 0.247 / 0.584 |
+| 45 | 0.221 / 1.023 | 0.261 / 0.613 |
+
+`scripts/cell_models/cycles_vs_dfn.py` places the same network in SPM, SPMe and multi-slice cell
+models and compares them with a PyBaMM DFN (Ai2020, 25 C): voltage RMSE 33.3 / 8.4 / 0.9 mV at 1C
+and 95.1 / 52.4 / 2.4 mV at 3C.
+
+## Run names
+
+The runs were renamed for this repository; the files inside each run folder are kept as they were
+written and still use the original names:
+
+| here | original |
+|---|---|
+| `runs/hpo_study` | `hpo_rollout_wk25r` |
+| `runs/v2_nondim/mionet_77k_s42` | `wk25r_s42` |
+| `runs/v2_nondim/mionet_77k_s43..s45` | `wk25rcv_s43..s45` |
+| `runs/studies/mionet_77k` | studies `wk25r` (HPO and seed 42) + `wk25rcv` (seeds 43-45) |

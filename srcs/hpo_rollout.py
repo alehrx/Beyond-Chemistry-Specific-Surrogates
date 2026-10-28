@@ -24,9 +24,9 @@ The objective
   lithium-balance projection is NOT applied inside the objective: the projection would hide the
   drift that the mass-conservation loss weight controls. Diagnostics stored per trial: the error
   with and without the projection, the surface-only error, and (with --with-dd) the one-step
-  PyBaMM objective of runs/hpo_study, so the two objectives can be compared.
+  PyBaMM objective of runs/hpo_study_300k, so the two objectives can be compared.
 
-Everything else follows runs/hpo_study: the m21d training configuration, the pilot PI sampler
+Everything else follows runs/hpo_study_300k: the m21d training configuration, the pilot PI sampler
 (here with twice the input functions, cache key 3cfd1fdf6cb09861), TPE seed 42, median pruner,
 60 trials. The best trial is written to model_config.json, which scripts/run_training.py trains in full
 ("hyperparameters": {"mode": "file", "path": <folder>}).
@@ -74,7 +74,7 @@ def force_m21d(T):
 
 def search_space(T):
     """The search space, pilot-set sizes and trial trainer (formerly in hpo_nd.py, the one-step study of
-    runs/hpo_study, whose pilot sampler, ranges and pruning interval this study keeps)."""
+    runs/hpo_study_300k, whose pilot sampler, ranges and pruning interval this study keeps)."""
     from types import SimpleNamespace
     from srcs.training import Trainer
     from srcs_EM.reference import stratified_mse
@@ -226,7 +226,7 @@ def main():
                     scale_factor2=T.PHI_SF, device=device, t_tr=1.0, epochs=epochs, lr=5e-4,
                     lr_end_factor=1e-2, loss_weights=[1.0, 1e3, 10.0, 10.0], hidden_dim=32,
                     num_hidden_layers=3, hard_bc=False)
-    log.info('pilot PI data key %s (hpo_study: bd2d1b4c05acf7a0)', HC._cache_key(data_cfg, VAL, 42))
+    log.info('pilot PI data key %s (hpo_study_300k: bd2d1b4c05acf7a0)', HC._cache_key(data_cfg, VAL, 42))
     if a.key_only:
         return
     (X_pde, X_ic, X_bc), val_pi = HC.get_pi_dataset(data_cfg, VAL, T.CACHE_DIR)
@@ -323,7 +323,7 @@ def main():
               open(os.path.join(out_dir, 'model_config.json'), 'w'), indent=2)
     json.dump({'date': __import__('datetime').datetime.now().isoformat(timespec='seconds'),
                'description': 'HPO with a chemistry-free roll-out objective against the exact solution',
-               'dataset': 'pilot PI set (hpo_study data) + exact roll-out chains, no PyBaMM in the objective',
+               'dataset': 'pilot PI set (hpo_study_300k data) + exact roll-out chains, no PyBaMM in the objective',
                'args': vars(a), 'pilot': DATA, 'lr_range': list(lr_range), 'n_chains': N_CHAINS, 'n_steps': N_STEPS, 'chain_seed': CHAIN_SEED,
                'dtau_range': DTAU_RANGE, 'phi_segment_mean': SEG_MEAN, 'phi_clip': PHI_CLIP,
                'n_trials': len(study.trials), 'hpo_epochs': epochs},

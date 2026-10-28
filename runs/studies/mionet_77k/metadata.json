@@ -1,0 +1,17 @@
+{
+  "study": "mionet_77k",
+  "merged_from": {
+    "wk25r": {
+      "date": "2026-10-25T09:45:01",
+      "description": "New HPO with the roll-out objective against the exact parameter-free solution (as described in the paper: 60 trials x 200 epochs, pilot set 300x3000 / 400x100 / 400x300, lr 1e-4..1e-3, 128 chains x 10 steps, no mass-conservation projection, no PyBaMM), then one seed trained with the wk25c recipe (lr decay over 1000 epochs, early stopping after it, L-BFGS), scored on the paper's protocol",
+      "dataset": "physics-informed, generated (no labels)",
+      "config": "configs\\wk25r.json"
+    },
+    "wk25rcv": {
+      "date": "2026-10-27T14:15:07",
+      "description": "Cross-validation of the wk25r network (64 x 7 SiLU from the roll-out HPO runs/hpo_rollout_wk25r): seeds 43-45 with exactly the wk25r recipe; num_batches fixed to the 32 that autotune chose for wk25r_s42. Seed 42 is wk25r_s42 in study wk25r.",
+      "dataset": "physics-informed, generated (no labels)",
+      "config": "configs\\wk25rcv.json"
+    }
+  }
+}

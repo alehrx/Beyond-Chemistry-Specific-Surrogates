@@ -32,6 +32,7 @@ Run button: full training. Set env TRAIN_ND_SMOKE=1 for a 3-epoch pipeline smoke
 import os
 import sys
 import json
+import re
 import shutil
 import logging
 import datetime
@@ -1000,12 +1001,24 @@ def main():
     logger.info("batches: %d  (%d pde / %d ic / %d bc profiles per batch)", int(nb),
                 -(-X_pde_raw.shape[0] // int(nb)), -(-X_ic_raw.shape[0] // int(nb)),
                 -(-X_bc_raw.shape[0] // int(nb)))
+    # the resolved count goes into training.log too: with 'auto' it is the only record of it, and a
+    # resume has to use the same one (read BEFORE this process adds its own line)
+    nb_logged = re.findall(r'batches per epoch: (\d+) \(num_batches=', open(tracker.log_path).read()) \
+        if RESUME and tracker.log_path is not None and tracker.log_path.exists() else []
+    tracker.logger.info("batches per epoch: %d (num_batches=%s)", int(nb), NUM_BATCHES)
     start_epoch = 0
     if RESUME:
         assert not (ONLY_LBFGS or LBFGS_PHASE or INIT_FROM or ADAPTIVE_SAMPLE), 'resume covers the Adam stage only'
         saved = json.load(open(os.path.join(tracker.run_dir, 'config.json')))['config_dict']
         diff = {k: (saved.get(k), v) for k, v in json.loads(json.dumps(cfg_dict, default=str)).items()
                 if saved.get(k) != v}
+        if str(saved.get('num_batches')).lower() == 'auto' and str(NUM_BATCHES).lower() == 'auto':
+            diff.pop('num_batches', None)          # config.json keeps 'auto'; compare the resolved count
+            if nb_logged and int(nb_logged[0]) != int(nb):
+                diff['num_batches'] = (int(nb_logged[0]), int(nb))
+            elif not nb_logged:
+                tracker.logger.warning("resume: the original run did not record its resolved batch count; "
+                                       "autotune chose %d again", int(nb))
         if diff:                                   # device included: never continue a GPU run on the CPU
             raise SystemExit('resume: settings differ from the original run %s: %s' % (tracker.run_dir, diff))
         start_epoch, (loader_pde, loader_ic, loader_bc, loader_val) = resume_state(

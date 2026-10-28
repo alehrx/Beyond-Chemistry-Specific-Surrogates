@@ -9,7 +9,8 @@ One JSON file per training study, run with
 
 Results: `runs/studies/<name>/` (config copy, metadata, `study.log`, `results.csv`, `figures/`);
 networks: `runs/v2_nondim/<name>_s<seed>` and `..._lbfgs`. A study name is never reused with a
-different configuration: change `name` for every new study. `wk25.json` is a complete example.
+different configuration: change `name` for every new study. `mionet_77k.json` (the reported network,
+seeds 42-45, hyperparameters from `runs/hpo_study`) is a complete example.
 
 ## Keys
 
@@ -20,8 +21,8 @@ different configuration: change `name` for every new study. `wk25.json` is a com
 
 **`hyperparameters`**: architecture, lr and loss weights. Three modes:
 - `{"mode": "file", "path": "runs/hpo_study"}`: a folder holding `model_config.json` (any earlier HPO).
-- `{"mode": "manual", "hidden_dim": 128, "num_hidden_layers": 7, "activation": "tanh", "lr": 8.36e-4,
-   "w_pde": 19.6, "w_ic": 597, "w_bc": 148, "w_mc": 2.49}`: values set by hand.
+- `{"mode": "manual", "hidden_dim": 64, "num_hidden_layers": 7, "activation": "silu", "lr": 3.57e-4,
+   "w_pde": 249, "w_ic": 1666, "w_bc": 299, "w_mc": 11.2}`: values set by hand.
 - `{"mode": "run", "hpo_name": "hpo_rollout_new", "args": {...}}`: a new roll-out HPO, then its best
   trial. `args` are the options of `scripts/hpo_rollout.py` without the dashes, e.g.
   `{"steps": 10, "epochs": 250, "hidden": [16, 32, 64, 128], "layers": [2, 8], "lr_range": [1e-4, 3e-3],
@@ -46,7 +47,10 @@ functions every N epochs). The validation set is fixed (150 x 1000 / 300 x 100 /
   `monitor2`: a second metric to keep a checkpoint for in `best_pi/` (null = none).
 
 **`lbfgs`**: `enabled`, `epochs`, `patience`, `lr`, `pool`, `k`, `c` (residual-based sampling),
-`ny_pde` (points per function in the full batch), `monitor`.
+`ny_pde` (points per function in the full batch), `monitor`, and optionally `num_batches`: the
+batch count used while the adaptive set is drawn (default: the Adam stage's value). `"auto"` empties
+the GPU cache after the draw; with a fixed count the full-batch step can run out of memory, as it
+did for seed 43 of `mionet_77k` (originally study `wk25rcv`) with 32.
 
 **`scoring`**: `enabled`, `tau_target` (window rule), `models`: `"adam"`, `"lbfgs"` or `"both"`,
 `direct` (default true): the network is evaluated at the 51 scoring radii themselves; false = its

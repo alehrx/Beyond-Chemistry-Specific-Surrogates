@@ -3,13 +3,17 @@ fig_hpo_v2.py
 =============
 Hyperparameter-search figure.
 
-    (a) optimisation history: every trial, the running best, and the selected configuration
-    (b) fANOVA importance, loss weights separated from architecture and optimiser
+    optimisation history: every trial, the running best, and the selected configuration
+    --importance adds a second panel: fANOVA importance, loss weights separated from architecture
+    and optimiser. The paper does not show it: with ~40 TPE trials the ranking follows where the
+    sampler went, and refitting it on 80 % subsets of the trials moves the top importances by tens
+    of percentage points.
 
 Writes figures/fig_hpo.pdf.  Run button; no arguments.
 
-    python scripts/figures/fig_hpo.py                                   # runs/hpo_study (the paper's figure)
+    python scripts/figures/fig_hpo.py                                   # runs/hpo_study (the reported search; not a paper figure)
     python scripts/figures/fig_hpo.py --run <folder>                    # any other study under runs/
+    python scripts/figures/fig_hpo.py --importance                      # with the fANOVA panel
 """
 import argparse
 import os
@@ -44,8 +48,9 @@ PAPER = os.path.dirname(os.path.abspath(__file__))
 SM_ROOT = os.path.abspath(os.path.join(PAPER, os.pardir, os.pardir))
 N_SEEDS = 20
 STUDIES = {                       # run folder -> (study name, objective label)
-    'hpo_rollout_s10_p2_noproj': ('MIONet_ND_HPO_rollout', r'roll-out objective (MSE)'),
-    'hpo_study': ('MIONet_ND_HPO', r'validation objective $\mathcal{E}$'),
+    'hpo_rollout_s10_p2_noproj': ('MIONet_ND_HPO_rollout', r'roll-out error $\mathcal{E}$'),
+    'hpo_study': ('MIONet_ND_HPO_rollout', r'roll-out error $\mathcal{E}$'),
+    'hpo_study_300k': ('MIONet_ND_HPO', r'validation objective $\mathcal{E}$'),
 }
 FIG_DIR = os.environ.get('MIONET_FIG_DIR') or os.path.join(SM_ROOT, 'figures')   # override: paper folder
 
@@ -62,9 +67,11 @@ C_W, C_A = '#0072B2', '#9C9C9C'          # loss weights / architecture and optim
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--run', default='hpo_study',                      # the paper's HPO figure
+    ap.add_argument('--run', default='hpo_study',                      # the reported search
                     help='HPO folder: a name under runs/ or a path to a folder holding study.db')
-    HPO_RUN = ap.parse_args().run
+    ap.add_argument('--importance', action='store_true', help='add the fANOVA importance panel')
+    args = ap.parse_args()
+    HPO_RUN, IMPORTANCE = args.run, args.importance
     import optuna
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     folder = HPO_RUN if os.path.isdir(HPO_RUN) else os.path.join(SM_ROOT, 'runs', HPO_RUN)
@@ -75,7 +82,7 @@ def main():
         study_name, ylabel = STUDIES[key]
     else:                                         # any other study: the only one in its database
         study_name = optuna.get_all_study_names(storage)[0]
-        ylabel = ('roll-out objective (MSE)' if 'rollout' in study_name
+        ylabel = (r'roll-out error $\mathcal{E}$' if 'rollout' in study_name
                   else r'validation objective $\mathcal{E}$')
     st = optuna.load_study(study_name=study_name, storage=storage)
 
@@ -86,16 +93,12 @@ def main():
     n_pruned = sum(t.state.name == 'PRUNED' for t in st.trials)
     b = st.best_trial
 
-    runs = {}
-    for seed in range(N_SEEDS):
-        ev = optuna.importance.FanovaImportanceEvaluator(seed=seed)
-        for k, val in optuna.importance.get_param_importances(st, evaluator=ev).items():
-            runs.setdefault(k, []).append(val)
-    imp = dict(sorted({k: float(np.mean(x)) for k, x in runs.items()}.items(), key=lambda kv: -kv[1]))
-    sd = {k: float(np.std(x)) for k, x in runs.items()}
-
-    fig = plt.figure(figsize=(170 * mm, 66 * mm), layout='constrained')
-    gs = fig.add_gridspec(1, 2, width_ratios=[1.1, 1.0])
+    if IMPORTANCE:
+        fig = plt.figure(figsize=(170 * mm, 66 * mm), layout='constrained')
+        gs = fig.add_gridspec(1, 2, width_ratios=[1.1, 1.0])
+    else:
+        fig = plt.figure(figsize=(100 * mm, 62 * mm), layout='constrained')
+        gs = fig.add_gridspec(1, 1)
 
     # ── (a) optimisation history ────────────────────────────────────────────
     ax = fig.add_subplot(gs[0, 0])
@@ -105,13 +108,30 @@ def main():
                 label='selected', zorder=5)
     ax.set_xlabel('trial')
     ax.set_ylabel(ylabel)
-    ax.set_title((r'\textbf{(a)} Search history' if TEX else '(a) Search history'), fontsize=9, loc='left')
-    ax.legend(loc='upper right', markerscale=0.55, handletextpad=0.5, labelspacing=0.35)
-    ax.text(0.97, 0.63, r'%d trials, %d pruned' % (len(st.trials), n_pruned),
-            transform=ax.transAxes, ha='right', fontsize=7.5, color='0.35')
+    if IMPORTANCE:
+        ax.set_title((r'\textbf{(a)} Search history' if TEX else '(a) Search history'), fontsize=9, loc='left')
+    # the trial count as the legend's title: a free-floating label collides with the legend or the
+    # markers depending on where the trials of a given study fall
+    leg = ax.legend(loc='upper right', markerscale=0.55, handletextpad=0.5, labelspacing=0.35,
+                    title=r'%d trials, %d pruned' % (len(st.trials), n_pruned), title_fontsize=7.5,
+                    frameon=True, facecolor='white', edgecolor='none', framealpha=0.9)   # over the markers
+    leg.get_title().set_color('0.35')
     ax.spines[['top', 'right']].set_visible(False)
 
+    if not IMPORTANCE:
+        fig.savefig(os.path.join(FIG_DIR, 'fig_hpo.pdf'))
+        log.info('best trial %d: E = %.3e, lambda_M = %.3g', b.number, b.value, b.params['w_cons'])
+        log.info('written figures/fig_hpo.pdf')
+        return
+
     # ── (b) importance, weights against the rest ────────────────────────────
+    runs = {}
+    for seed in range(N_SEEDS):
+        ev = optuna.importance.FanovaImportanceEvaluator(seed=seed)
+        for k, val in optuna.importance.get_param_importances(st, evaluator=ev).items():
+            runs.setdefault(k, []).append(val)
+    imp = dict(sorted({k: float(np.mean(x)) for k, x in runs.items()}.items(), key=lambda kv: -kv[1]))
+    sd = {k: float(np.std(x)) for k, x in runs.items()}
     ax = fig.add_subplot(gs[0, 1])
     keys = list(imp)[::-1]
     cols = [C_W if k in WEIGHTS else C_A for k in keys]

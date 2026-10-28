@@ -1,9 +1,0 @@
-{
-  "date": "2026-10-25T04:02:55",
-  "description": "MIONet v2: dimensionless single-particle diffusion operator, physics-informed only (PDE/IC/BC/cons + rollout), one net for both electrodes",
-  "dataset": "PI collocation in (xi, tau) via srcs.prepData (no PyBaMM labels in training); validation: PyBaMM SPM Mohtat2020 at [-5.0, 10.0, 25.0, 45.0] C, both electrodes",
-  "git_hash": "3c4c16e",
-  "git_hash_at_save": "3c4c16e",
-  "device": "cuda",
-  "smoke": false
-}

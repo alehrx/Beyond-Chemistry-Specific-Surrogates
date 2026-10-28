@@ -23,7 +23,7 @@ import webbrowser
 import pandas as pd
 
 # ============================== what to monitor ==============================
-STUDY = 'trained_model'  # the "name" of the study's JSON
+STUDY = 'mionet_77k'  # the "name" of the study's JSON
 REFRESH_S = 30           # how often the logs are updated [s]
 PORT = 6006              # the page is http://localhost:<PORT>
 OPEN_BROWSER = True

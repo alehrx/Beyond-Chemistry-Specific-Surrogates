@@ -63,7 +63,7 @@ RECIPE = dict(
     CONS_N_KSI=41, CONS_N_T=4, CONS_USE_IC=False, CONS_LEGACY=False,
     TRACK_PI_VAL=True, TIME_FEATURES='linear', ROLLOUT_K=0, LBFGS_PHASE=False,
     # defaults of the dataset and training sections; the paper's networks set their own in
-    # configs/trained_model.json
+    # configs/mionet_77k.json
     N_PDE=1000, NY_PDE=20000, N_IC=2000, NY_IC=100, N_BC=2000, NY_BC=3000, RESAMPLE_EVERY=50,
     EPOCHS=1000, PATIENCE=100, LR_DECAY=False, LR_DECAY_EPOCHS=None, LR_END_FACTOR=0.01, ES_FROM_EPOCH=0,
     MONITOR='pi_val_loss', MONITOR2=None,
@@ -190,7 +190,7 @@ def stage_lbfgs(cfg, name, dry, resume=False):
          '--monitor', lb.get('monitor', 'pi_val_loss'), '--epochs', str(lb.get('epochs', 16)),
          '--patience', str(lb.get('patience', 5)), '--pool', str(lb.get('pool', 6)), '--k', str(lb.get('k', 1)),
          '--c', str(lb.get('c', 1)), '--lr', str(lb.get('lr', 3e-4)), '--ny-pde', str(lb.get('ny_pde', 1000)),
-         '--no-score'], dry)
+         '--no-score'] + (['--num-batches', str(lb['num_batches'])] if 'num_batches' in lb else []), dry)
 
 
 def final_models(cfg, names):
