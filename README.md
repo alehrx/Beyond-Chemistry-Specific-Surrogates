@@ -115,3 +115,7 @@ written and still use the original names:
 | `runs/v2_nondim/mionet_77k_s42` | `wk25r_s42` |
 | `runs/v2_nondim/mionet_77k_s43..s45` | `wk25rcv_s43..s45` |
 | `runs/studies/mionet_77k` | studies `wk25r` (HPO and seed 42) + `wk25rcv` (seeds 43-45) |
+
+## Licence
+
+MIT; see `LICENSE`. If you use this code or the trained networks, please cite the accompanying paper.

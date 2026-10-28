@@ -18,3 +18,6 @@ runs/_refine_driver_*.py
 
 # TensorBoard logs written by scripts/monitor_training.py
 runs/studies/*/tensorboard/
+
+# outputs of scripts/cell_models/cycles_vs_dfn.py (one folder per run), regenerated
+runs/cell_models/

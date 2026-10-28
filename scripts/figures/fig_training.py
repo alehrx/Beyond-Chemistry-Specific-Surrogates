@@ -131,7 +131,9 @@ def main():
     n_a = len(a)
     best_a = json.load(open(os.path.join(ADAM, 'config.json')))['run_summary']['best_epoch']
     os.makedirs(FIG, exist_ok=True)
-    if args.no_lbfgs:
+    # the Adam stage alone also when the refinement is not there (the published repository ships
+    # only the Adam networks)
+    if args.no_lbfgs or not os.path.exists(os.path.join(LBFGS, 'history.csv')):
         draw(a, n_a, lbfgs=False, best=best_a).savefig(os.path.join(FIG, 'fig_training.pdf'))
         log.info('Adam %d epochs, best %d (PI val %.3e)', n_a, best_a, a.pi_val_loss.iloc[best_a])
         return
